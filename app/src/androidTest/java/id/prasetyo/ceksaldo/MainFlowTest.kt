@@ -1,0 +1,67 @@
+package id.prasetyo.ceksaldo
+
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/** Menjalankan alur utama aplikasi di emulator: daftar, cari, favorit, tambah entri, pengaturan. */
+@RunWith(AndroidJUnit4::class)
+class MainFlowTest {
+
+    @get:Rule
+    val rule = createAndroidComposeRule<MainActivity>()
+
+    private val searchField = hasSetTextAction() and hasText("Cari bank, e-wallet, operator")
+
+    @Test
+    fun mainFlow() {
+        // Daftar bawaan tampil
+        rule.onNodeWithText("Cek Saldo").assertIsDisplayed()
+        rule.onNodeWithText("BRI").assertIsDisplayed()
+
+        // Pencarian
+        rule.onNode(searchField).performTextInput("dana")
+        rule.onNodeWithText("DANA").assertIsDisplayed()
+        rule.onNodeWithText("BRI").assertDoesNotExist()
+        rule.onNodeWithContentDescription("Hapus").performClick()
+        rule.onNodeWithText("BRI").assertIsDisplayed()
+
+        // Favorit kosong, lalu tandai satu
+        rule.onNodeWithText("Favorit").performClick()
+        rule.onNodeWithText("Belum ada favorit", substring = true).assertIsDisplayed()
+        rule.onNodeWithText("Semua").performClick()
+        rule.onAllNodesWithContentDescription("Tambah ke favorit").onFirst().performClick()
+        rule.onNodeWithText("Favorit").performClick()
+        rule.onAllNodesWithContentDescription("Hapus dari favorit").assertCountEquals(1)
+        rule.onNodeWithText("Semua").performClick()
+
+        // Tambah entri sendiri
+        rule.onNodeWithText("Tambah").performClick()
+        rule.onNode(hasSetTextAction() and hasText("Nama")).performTextInput("Bank Uji")
+        rule.onNode(hasSetTextAction() and hasText("Kode USSD (opsional)")).performTextInput("*999#")
+        rule.onNodeWithText("Simpan").performClick()
+        rule.onNode(searchField).performTextInput("Bank Uji")
+        rule.onNodeWithText("Bank Uji").assertIsDisplayed()
+        rule.onNodeWithText("USSD").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Hapus").performClick()
+
+        // Pengaturan SIM
+        rule.onNodeWithContentDescription("Pengaturan").performClick()
+        rule.onNodeWithText("SIM untuk USSD").assertIsDisplayed()
+        rule.onNodeWithText("SIM 2").performClick()
+        rule.onNodeWithText("Tutup").performClick()
+        rule.onNodeWithText("SIM untuk USSD").assertDoesNotExist()
+    }
+}
