@@ -80,7 +80,7 @@ class MainFlowTest {
         rule.onNode(searchField).performTextInput("Bank Uji")
         rule.onNode(searchField).performImeAction()
         waitShown("Bank Uji")
-        rule.onNodeWithText("Bank Uji").assertIsDisplayed()
+        rule.onNode(hasText("Bank Uji") and !hasSetTextAction()).assertIsDisplayed()
         rule.onNodeWithText("USSD").assertIsDisplayed()
         rule.onNodeWithContentDescription("Hapus").performClick()
 
