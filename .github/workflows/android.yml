@@ -89,12 +89,4 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: |
-            ./gradlew --no-daemon connectedDebugAndroidTest
-            adb install -r app/build/outputs/apk/release/app-release.apk
-            adb logcat -c
-            adb shell am start -W -n id.prasetyo.ceksaldo/.MainActivity
-            sleep 8
-            adb shell pidof id.prasetyo.ceksaldo || (adb logcat -d -s AndroidRuntime:E; exit 1)
-            if adb logcat -d -s AndroidRuntime:E | grep -q "FATAL EXCEPTION"; then adb logcat -d -s AndroidRuntime:E; exit 1; fi
-            echo "APK release berjalan tanpa crash"
+          script: bash .github/scripts/emulator-test.sh
