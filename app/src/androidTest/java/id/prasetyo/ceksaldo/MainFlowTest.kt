@@ -73,7 +73,7 @@ class MainFlowTest {
         waitShown("BRI")
 
         // Tambah entri sendiri
-        rule.onNodeWithText("Tambah").performClick()
+        rule.onNodeWithText("Tambah", useUnmergedTree = true).performClick()
         rule.onNode(hasSetTextAction() and hasText("Nama")).performTextInput("Bank Uji")
         rule.onNode(hasSetTextAction() and hasText("Kode USSD (opsional)")).performTextInput("*999#")
         rule.onNodeWithText("Simpan").performClick()
