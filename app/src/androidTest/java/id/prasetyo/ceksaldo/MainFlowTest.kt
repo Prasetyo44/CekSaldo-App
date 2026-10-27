@@ -3,6 +3,7 @@ package id.prasetyo.ceksaldo
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
@@ -37,7 +39,7 @@ class MainFlowTest {
         rule.onAllNodesWithContentDescription(description).fetchSemanticsNodes().size == count
     }
 
-    private val searchField = hasSetTextAction() and hasText("Cari bank, e-wallet, operator")
+    private val searchField = hasTestTag("search")
 
     @Test
     fun mainFlow() {
@@ -52,6 +54,7 @@ class MainFlowTest {
         rule.onNodeWithText("DANA").assertIsDisplayed()
         rule.onNodeWithText("BRI").assertDoesNotExist()
         rule.onNodeWithContentDescription("Hapus").performClick()
+        rule.onNode(searchField).performImeAction() // tutup keyboard
         waitShown("BRI")
         rule.onNodeWithText("BRI").assertIsDisplayed()
 
@@ -67,7 +70,7 @@ class MainFlowTest {
         waitCount("Hapus dari favorit", 1)
         rule.onAllNodesWithContentDescription("Hapus dari favorit").assertCountEquals(1)
         rule.onNodeWithText("Semua").performClick()
-        waitShown("DANA")
+        waitShown("BRI")
 
         // Tambah entri sendiri
         rule.onNodeWithText("Tambah").performClick()
@@ -75,6 +78,7 @@ class MainFlowTest {
         rule.onNode(hasSetTextAction() and hasText("Kode USSD (opsional)")).performTextInput("*999#")
         rule.onNodeWithText("Simpan").performClick()
         rule.onNode(searchField).performTextInput("Bank Uji")
+        rule.onNode(searchField).performImeAction()
         waitShown("Bank Uji")
         rule.onNodeWithText("Bank Uji").assertIsDisplayed()
         rule.onNodeWithText("USSD").assertIsDisplayed()
