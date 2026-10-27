@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Clear
@@ -35,6 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +52,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import id.prasetyo.ceksaldo.FILTERS
 import id.prasetyo.ceksaldo.MainViewModel
+import id.prasetyo.ceksaldo.filterProviders
 import id.prasetyo.ceksaldo.data.Provider
 import id.prasetyo.ceksaldo.util.BalanceActions
 
@@ -57,9 +60,10 @@ import id.prasetyo.ceksaldo.util.BalanceActions
 @Composable
 fun HomeScreen(vm: MainViewModel) {
     val context = LocalContext.current
-    val providers by vm.visible.collectAsStateWithLifecycle()
-    val query by vm.query.collectAsStateWithLifecycle()
-    val filter by vm.filter.collectAsStateWithLifecycle()
+    val all by vm.providers.collectAsStateWithLifecycle()
+    val query = vm.query
+    val filter = vm.filter
+    val providers = remember(all, query, filter) { filterProviders(all, query, filter) }
     val sim by vm.sim.collectAsStateWithLifecycle()
 
     var editing by remember { mutableStateOf<Provider?>(null) }
@@ -119,12 +123,12 @@ fun HomeScreen(vm: MainViewModel) {
         Column(Modifier.padding(padding).fillMaxSize()) {
             OutlinedTextField(
                 value = query,
-                onValueChange = { vm.query.value = it },
+                onValueChange = { vm.query = it },
                 placeholder = { Text("Cari bank, e-wallet, operator") },
                 leadingIcon = { Icon(Icons.Outlined.Search, null) },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
-                        IconButton(onClick = { vm.query.value = "" }) { Icon(Icons.Outlined.Clear, "Hapus") }
+                        IconButton(onClick = { vm.query = "" }) { Icon(Icons.Outlined.Clear, "Hapus") }
                     }
                 },
                 singleLine = true,
@@ -139,7 +143,7 @@ fun HomeScreen(vm: MainViewModel) {
                 items(FILTERS) { f ->
                     FilterChip(
                         selected = f == filter,
-                        onClick = { vm.filter.value = f },
+                        onClick = { vm.filter = f },
                         label = { Text(f.label) },
                     )
                 }
@@ -156,7 +160,10 @@ fun HomeScreen(vm: MainViewModel) {
                     )
                 }
             } else {
+                // Posisi scroll dimulai dari atas lagi setiap kata kunci atau filter berubah.
+                val listState = key(query, filter) { rememberLazyListState() }
                 LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
