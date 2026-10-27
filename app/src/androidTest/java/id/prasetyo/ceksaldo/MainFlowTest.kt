@@ -90,5 +90,11 @@ class MainFlowTest {
         rule.onNodeWithText("SIM 2").performClick()
         rule.onNodeWithText("Tutup").performClick()
         rule.onNodeWithText("SIM untuk USSD").assertDoesNotExist()
+
+        // Tab kartu NFC terbuka (emulator tidak punya NFC, jadi cukup cek layarnya tampil)
+        rule.onNodeWithText("Kartu NFC").performClick()
+        waitShown("Kartu e-Money")
+        rule.onNodeWithText("Saldo").performClick()
+        waitShown("BRI")
     }
 }
