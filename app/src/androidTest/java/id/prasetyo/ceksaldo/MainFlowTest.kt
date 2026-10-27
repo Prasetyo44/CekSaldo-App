@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -23,6 +24,19 @@ class MainFlowTest {
     @get:Rule
     val rule = createAndroidComposeRule<MainActivity>()
 
+    // Daftar difilter lewat Flow di ViewModel, jadi tunggu sampai hasilnya muncul/hilang.
+    private fun waitShown(text: String, substring: Boolean = false) = rule.waitUntil(10_000) {
+        rule.onAllNodesWithText(text, substring = substring).fetchSemanticsNodes().isNotEmpty()
+    }
+
+    private fun waitGone(text: String) = rule.waitUntil(10_000) {
+        rule.onAllNodesWithText(text).fetchSemanticsNodes().isEmpty()
+    }
+
+    private fun waitCount(description: String, count: Int) = rule.waitUntil(10_000) {
+        rule.onAllNodesWithContentDescription(description).fetchSemanticsNodes().size == count
+    }
+
     private val searchField = hasSetTextAction() and hasText("Cari bank, e-wallet, operator")
 
     @Test
@@ -33,19 +47,27 @@ class MainFlowTest {
 
         // Pencarian
         rule.onNode(searchField).performTextInput("dana")
+        waitGone("BRI")
+        waitShown("DANA")
         rule.onNodeWithText("DANA").assertIsDisplayed()
         rule.onNodeWithText("BRI").assertDoesNotExist()
         rule.onNodeWithContentDescription("Hapus").performClick()
+        waitShown("BRI")
         rule.onNodeWithText("BRI").assertIsDisplayed()
 
         // Favorit kosong, lalu tandai satu
         rule.onNodeWithText("Favorit").performClick()
+        waitShown("Belum ada favorit", substring = true)
         rule.onNodeWithText("Belum ada favorit", substring = true).assertIsDisplayed()
         rule.onNodeWithText("Semua").performClick()
+        waitShown("BRI")
         rule.onAllNodesWithContentDescription("Tambah ke favorit").onFirst().performClick()
         rule.onNodeWithText("Favorit").performClick()
+        waitGone("DANA")
+        waitCount("Hapus dari favorit", 1)
         rule.onAllNodesWithContentDescription("Hapus dari favorit").assertCountEquals(1)
         rule.onNodeWithText("Semua").performClick()
+        waitShown("DANA")
 
         // Tambah entri sendiri
         rule.onNodeWithText("Tambah").performClick()
@@ -53,6 +75,7 @@ class MainFlowTest {
         rule.onNode(hasSetTextAction() and hasText("Kode USSD (opsional)")).performTextInput("*999#")
         rule.onNodeWithText("Simpan").performClick()
         rule.onNode(searchField).performTextInput("Bank Uji")
+        waitShown("Bank Uji")
         rule.onNodeWithText("Bank Uji").assertIsDisplayed()
         rule.onNodeWithText("USSD").assertIsDisplayed()
         rule.onNodeWithContentDescription("Hapus").performClick()
